@@ -4,6 +4,19 @@ pipeline {
         SSH_CRED = credentials('server-key')
     }
     stages {
+        stage('Prepare Environment') {
+            steps {
+                echo 'Installing dependencies'
+                sh 'sudo apt update && sudo apt install zip -y'
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
         stage('Build') {
             steps {
                 echo 'Building app'
@@ -17,7 +30,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying app'
-                // Add deployment commands here
+                // Deployment commands
             }
         }
 
