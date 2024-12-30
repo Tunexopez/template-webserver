@@ -18,7 +18,6 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying app'
-                
             }
         }
 
@@ -27,6 +26,6 @@ pipeline {
                 echo 'Remove existing files'
                 deleteDir()
             }
-        }
-    }
+        }
+    }
 }
