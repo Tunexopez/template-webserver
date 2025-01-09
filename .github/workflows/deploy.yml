@@ -3,20 +3,20 @@ name: Deploy HTML to EC2
 on:
   push:
     branches:
-      - github-action # Change to your branch that has the .github/workflows folder
+      - github-action # Replace with your branch name containing the .github/workflows folder
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: List working directory contents
+      - name: List Working Directory Contents
         run: ls -la
 
-        - name: Connect to EC2 and apply docker-compose file
+      - name: Connect to EC2 and Apply Docker Compose File
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -24,5 +24,10 @@ jobs:
           key: ${{ secrets.EC2_PEM }}
           port: 22
           script: |
-            # check that zip is isntalled 
-            sudo apt install zip -y
+            # Update package lists
+            sudo apt update -y
+            
+            # Install zip if not already installed
+            if ! command -v zip &> /dev/null; then
+              sudo apt install zip -y
+            fi
