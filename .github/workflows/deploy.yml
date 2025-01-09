@@ -16,18 +16,15 @@ jobs:
       - name: List Working Directory Contents
         run: ls -la
 
-      - name: Connect to EC2 and Apply Docker Compose File
+        - name: Deploy to NGINX
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_PUBLIC_IP }}
-          username: ubuntu
-          key: ${{ secrets.EC2_PEM }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.NGINX_SSH_KEY }}
           port: 22
           script: |
-            # Update package lists
-            sudo apt update -y
-            
-            # Install zip if not already installed
-            if ! command -v zip &> /dev/null; then
-              sudo apt install zip -y
-            fi
+            echo "Deploying application"
+            rm -rf /var/www/html/*
+            scp -r /github/workspace/* user@host:/var/www/html/
+      
