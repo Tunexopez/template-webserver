@@ -16,6 +16,7 @@ jobs:
       - name: List Working Directory Contents
         run: ls -la
 
+
       - name: Deploy to NGINX
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -28,3 +29,5 @@ jobs:
             rm -rf /var/www/html/*
             mkdir -p /var/www/html/
             scp -r /github/workspace/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/html/
+
+
