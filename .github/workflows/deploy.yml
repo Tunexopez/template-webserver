@@ -3,34 +3,45 @@ name: Deploy HTML to EC2
 on:
   push:
     branches:
-      - github-action # Replace with your branch name containing the .github/workflows folder
+      - github-action # Change to your branch that has the .github/workflows folder
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: List Working Directory Contents
+      - name: List working directory contents
         run: ls -la
 
+      - name: zip project
+        run: zip -r webapp.zip .
 
-      - name: Deploy to NGINX
+      - name: Connect to EC2 and copy docker compose file
+        uses: appleboy/scp-action@v0.1.7 # GitHub Action to SCP files to remote server
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }} # Public IP of your EC2 instance
+          username: ${{ secrets.EC2_USERNAME }} # Adjust based on your EC2 AMI
+          key: ${{ secrets.EC2_PEM }}
+          port: 22
+          source: "./webapp.zip" # Path to your artifact
+          target: "~/" 
+
+      - name: Connect to EC2 and apply docker-compose file
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.NGINX_SSH_KEY }}
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_PEM }}
           port: 22
           script: |
-            echo "Deploying application"
-            rm -rf /var/www/html/*
-            mkdir -p /var/www/html/
-            scp -r /github/workspace/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/html/
-
-
-
-
-            
+            # Check that zip is installed
+            sudo apt install zip -y
+            # Remove the existing files and directories
+            sudo rm -rf /var/www/html/ 
+            # Create a new, empty directory at /var/www/html/
+            sudo mkdir /var/www/html/
+            # Extract the contents of "webapp.zip" into the /var/www/html/ directory
+            sudo unzip webapp.zip -d /var/www/html/  
