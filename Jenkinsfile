@@ -1,36 +1,45 @@
 pipeline {
     agent any
     environment {
-        SSH_CRED = credentials('server-key') // Ensure 'server-key' exists in Jenkins credentials
+        SSH_CRED = credentials('server-key') // Replace 'server-key' with your Jenkins credential ID
+        REMOTE_SERVER = 'user@remote-server' // Replace with the remote server's username and address
+        DEPLOY_DIR = '/path/to/deployment'  // Replace with the deployment directory on the remote server
     }
     stages {
         stage('Build') {
             steps {
                 echo 'Building the application...'
                 sh '''
-                # Print current directory and list files
+                # Display the current directory
                 pwd
-                ls
-                
-                # Create a ZIP file of the project
+
+                # List the files in the workspace
+                ls -lah
+
+                # Create a zip archive of the project
                 zip -r webapp.zip .
-                
-                # List files to verify the ZIP creation
-                ls
+
+                # Confirm the zip file is created
+                ls -lh webapp.zip
                 '''
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying the application...'
-                sshagent(['SSH_CRED']) {
+                echo 'Deploying the application to the remote server...'
+                sshagent([SSH_CRED]) {
                     sh '''
-                    # Transfer the ZIP file to the remote server
-                    scp webapp.zip user@remote-server:/path/to/deployment/
+                    # Transfer the zip file to the remote server
+                    scp webapp.zip ${REMOTE_SERVER}:${DEPLOY_DIR}/
 
-                    # Log in to the server, unzip the file, and clean up
-                    ssh user@remote-server "unzip -o /path/to/deployment/webapp.zip -d /path/to/deployment/ && rm /path/to/deployment/webapp.zip"
+                    # SSH into the remote server, extract the zip, and clean up
+                    ssh ${REMOTE_SERVER} "
+                    mkdir -p ${DEPLOY_DIR} &&
+                    unzip -o ${DEPLOY_DIR}/webapp.zip -d ${DEPLOY_DIR} &&
+                    rm -f ${DEPLOY_DIR}/webapp.zip &&
+                    echo 'Deployment completed successfully.'
+                    "
                     '''
                 }
             }
@@ -38,20 +47,20 @@ pipeline {
 
         stage('Clean-Up') {
             steps {
-                echo 'Cleaning up workspace...'
-                deleteDir() // Deletes all files in the Jenkins workspace
+                echo 'Cleaning up the workspace...'
+                deleteDir() // Cleans the Jenkins workspace
             }
         }
     }
     post {
         always {
-            echo 'Pipeline execution completed.'
+            echo 'Pipeline execution finished.'
         }
         success {
-            echo 'Build and deployment were successful!'
+            echo 'Build and deployment succeeded!'
         }
         failure {
-            echo 'Pipeline failed. Please check the logs.'
+            echo 'Pipeline failed. Check the logs for details.'
         }
     }
 }
