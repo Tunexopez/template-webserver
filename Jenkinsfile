@@ -1,46 +1,30 @@
 pipeline {
     agent any
     environment {
-        APP_NAME = "my-app"
-    }
-    stages {
-        stage('Checkout') {
-            steps {
-                echo 'Checking out code...'
-                checkout scm
-            }
-        }
+        SSH_CRED = credentials('server-key')
+    }stages {
         stage('Build') {
             steps {
-                echo 'Building the application...'
-                sh 'npm install'  // Example for Node.js projects
-                sh 'npm run build'
+                echo 'Building app'
+                sh 'pwd'
+                sh 'ls'
+                sh 'zip -r webapp.zip .'
+                sh 'ls'
             }
         }
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-                sh 'npm test'
-            }
-        }
+        
         stage('Deploy') {
             steps {
-                echo 'Deploying the application...'
-                sshagent(['your-ssh-credential-id']) {
-                    sh '''
-                    scp -r build/ user@server:/var/www/my-app
-                    ssh user@server "sudo systemctl restart my-app"
-                    '''
-                }
+                echo 'Deploying app'
+                // Add deployment commands here
             }
         }
-    }
-    post {
-        success {
-            echo 'Build and deployment successful!'
-        }
-        failure {
-            echo 'Build failed!'
+
+        stage('Clean-Up') {
+            steps {
+                echo 'Removing existing files'
+                deleteDir()
+            }
         }
     }
 }
