@@ -13,10 +13,11 @@ pipeline {
                 sh "ls"
             }
         }
-
+        
         stage('Deploy') {
             steps {
                 echo 'Deploying app'
+                // Add your deployment commands here
             }
         }
 
