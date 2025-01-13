@@ -1,16 +1,21 @@
 pipeline {
     agent any
     environment {
-        SSH_CRED = credentials('server-key') // Ensure the correct credential ID is provided
+        SSH_CRED = credentials('server-key') // Ensure 'server-key' exists in Jenkins credentials
     }
     stages {
         stage('Build') {
             steps {
-                echo 'Building app...'
+                echo 'Building the application...'
                 sh '''
+                # Print current directory and list files
                 pwd
                 ls
+                
+                # Create a ZIP file of the project
                 zip -r webapp.zip .
+                
+                # List files to verify the ZIP creation
                 ls
                 '''
             }
@@ -18,15 +23,23 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo 'Deploying app...'
-                // Add deployment commands here
+                echo 'Deploying the application...'
+                sshagent(['SSH_CRED']) {
+                    sh '''
+                    # Transfer the ZIP file to the remote server
+                    scp webapp.zip user@remote-server:/path/to/deployment/
+
+                    # Log in to the server, unzip the file, and clean up
+                    ssh user@remote-server "unzip -o /path/to/deployment/webapp.zip -d /path/to/deployment/ && rm /path/to/deployment/webapp.zip"
+                    '''
+                }
             }
         }
 
         stage('Clean-Up') {
             steps {
                 echo 'Cleaning up workspace...'
-                deleteDir()
+                deleteDir() // Deletes all files in the Jenkins workspace
             }
         }
     }
